@@ -1,6 +1,6 @@
 "use client"
 import { useNavigate } from "react-router-dom"
-import Navbar from "./navbar"
+import Navbar from "./Navbar"; 
 
 const HeroSection = () => {
   const navigate = useNavigate()
