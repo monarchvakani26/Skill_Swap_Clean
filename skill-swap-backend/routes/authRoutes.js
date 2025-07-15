@@ -7,7 +7,7 @@ const jwt = require('jsonwebtoken');
 const JWT_SECRET = process.env.JWT_SECRET || '99d6e10c4ea8c33c77cba5952cff99b5490cda2b8103680be73b333442303d85'; // Move to .env later
 
 // POST /api/login
-router.post('/login', async (req, res) => {
+router.post('/api/auth/login', async (req, res) => {
   try {
     const { email, password } = req.body;
 
