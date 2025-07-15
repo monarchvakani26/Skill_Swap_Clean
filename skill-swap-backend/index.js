@@ -53,7 +53,7 @@ app.use(session({
     mongoUrl: process.env.MONGO_URI,
     collectionName: "sessions",
   }),
-  cookie: {
+  cookie: { 
     httpOnly: true,
     maxAge: 1000 * 60 * 60 * 24,
     sameSite: "lax",
