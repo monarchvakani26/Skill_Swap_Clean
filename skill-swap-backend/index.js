@@ -65,7 +65,7 @@ app.use(passport.initialize());
 app.use(passport.session());
 
 app.use("/uploads", express.static("uploads"));
-app.use("/auth", authRoutes);
+app.use("/api/auth", authRoutes);
 
 const PORT = process.env.PORT || 8080;
 

@@ -10,7 +10,7 @@ function Login() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const res = await axios.post("/auth/login", { email, password });
+      const res = await axios.post("/api/auth/login", { email, password });
       console.log("Login successful:", res.data);
       if (res.data.user) {
         navigate("/dashboard");
