@@ -41,7 +41,7 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 app.use(cors({
-  origin: ['https://skill-swap-clean-git-main-monarchvakani05-5952s-projects.vercel.app/'], 
+  origin: ['https://skill-swap-clean.vercel.app/'], 
   credentials: true,
 }));
 
