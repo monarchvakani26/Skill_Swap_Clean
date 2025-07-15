@@ -26,7 +26,7 @@ router.post("/register", async (req, res) => {
 });
 
 // Login
-router.post("/login", (req, res, next) => {
+router.post("/api/auth/login", (req, res, next) => {
   passport.authenticate("local", (err, user, info) => {
     if (err) return res.status(500).json({ message: "Something went wrong", error: err });
     if (!user) return res.status(400).json({ message: info.message });
