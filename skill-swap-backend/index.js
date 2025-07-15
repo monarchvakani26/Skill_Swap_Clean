@@ -67,7 +67,7 @@ app.use(passport.session());
 app.use("/uploads", express.static("uploads"));
 app.use("/api/auth", authRoutes);
 
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 8080;
 
 mongoose.connect(process.env.MONGO_URI)
   .then(() => {
