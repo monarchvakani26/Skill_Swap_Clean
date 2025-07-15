@@ -13,7 +13,7 @@ function Register() {
    const handleRegister = async (e) => {
     e.preventDefault();
     try {
-      const res = await axios.post(`${VITE_BACKEND_URL}/api/auth/register`, { name, email, password });
+      const res = await axios.post(`${import.meta.env.VITE_BACKEND_URL}/api/auth/register`, { name, email, password });
       console.log("Registration successful:", res.data);
       if (res.status === 201) {
         navigate("/login");
