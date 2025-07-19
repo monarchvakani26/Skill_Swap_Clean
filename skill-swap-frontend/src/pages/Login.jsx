@@ -15,7 +15,7 @@ function Login() {
       if (res.data.user) {
         navigate("/dashboard");
       } else {
-        alert("Unexpected response");
+        alert("Login succeeded, but user not returned")
       }
       
     } catch (err) {
