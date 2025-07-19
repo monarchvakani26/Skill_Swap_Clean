@@ -1,31 +1,218 @@
-const express = require('express');
+// const express = require('express');
+// const router = express.Router();
+// const User = require('../models/User');
+// const bcrypt = require('bcrypt');
+// const jwt = require('jsonwebtoken');
+
+// const JWT_SECRET = process.env.JWT_SECRET || '99d6e10c4ea8c33c77cba5952cff99b5490cda2b8103680be73b333442303d85'; // Move to .env later
+
+// // POST /api/login
+// router.post('/api/auth/login', async (req, res) => {
+//   try {
+//     const { email, password } = req.body;
+
+//     // Check if user exists
+//     const user = await User.findOne({ email });
+//     if (!user) return res.status(400).json({ message: 'Invalid email or password' });
+
+//     // Compare passwords
+//     const isMatch = await bcrypt.compare(password, user.password);
+//     if (!isMatch) return res.status(400).json({ message: 'Invalid email or password' });
+
+//     // Create JWT Token
+//     const token = jwt.sign({ id: user._id }, JWT_SECRET, { expiresIn: '1d' });
+
+//     res.status(200).json({ message: 'Login successful', token });
+//   } catch (error) {
+//     res.status(500).json({ message: 'Server error' });
+//   }
+// });
+
+// module.exports = router;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+import express from "express";
+import bcrypt from "bcryptjs";
+import passport from "passport";
+import jwt from "jsonwebtoken"; // Import jwt for direct token creation if needed, or rely on Passport session
+import User from "../models/User.js";
+import multer from 'multer';
+
 const router = express.Router();
-const User = require('../models/User');
-const bcrypt = require('bcrypt');
-const jwt = require('jsonwebtoken');
 
-const JWT_SECRET = process.env.JWT_SECRET || '99d6e10c4ea8c33c77cba5952cff99b5490cda2b8103680be73b333442303d85'; // Move to .env later
+// IMPORTANT: Move this to your .env file and access via process.env.JWT_SECRET
+// For demonstration, keeping it here, but it should NOT be hardcoded in production.
+const JWT_SECRET = process.env.JWT_SECRET || '99d6e10c4ea8c33c77cba5952cff99b5490cda2b8103680be73b333442303d85';
 
-// POST /api/login
-router.post('/api/auth/login', async (req, res) => {
+// --- Local Authentication Routes ---
+
+// POST /register
+router.post("/register", async (req, res) => {
+  const { name, email, password } = req.body;
   try {
-    const { email, password } = req.body;
+    const existingUser = await User.findOne({ email });
+    if (existingUser) {
+      return res.status(400).json({ message: "User already exists" });
+    }
 
-    // Check if user exists
-    const user = await User.findOne({ email });
-    if (!user) return res.status(400).json({ message: 'Invalid email or password' });
+    const hashedPassword = await bcrypt.hash(password, 10);
+    const user = await User.create({ name, email, password: hashedPassword });
 
-    // Compare passwords
-    const isMatch = await bcrypt.compare(password, user.password);
-    if (!isMatch) return res.status(400).json({ message: 'Invalid email or password' });
-
-    // Create JWT Token
-    const token = jwt.sign({ id: user._id }, JWT_SECRET, { expiresIn: '1d' });
-
-    res.status(200).json({ message: 'Login successful', token });
+    // Automatically log in the user after registration
+    req.login(user, (err) => {
+      if (err) {
+        console.error("Login after signup failed:", err);
+        return res.status(500).json({ message: "Login after signup failed" });
+      }
+      // If using JWT for client-side authentication, generate and send token
+      const token = jwt.sign({ id: user._id }, JWT_SECRET, { expiresIn: '1d' });
+      return res.status(201).json({ message: "Registered and logged in", user: { id: user._id, name: user.name, email: user.email }, token });
+    });
   } catch (error) {
-    res.status(500).json({ message: 'Server error' });
+    console.error("Registration Error:", error);
+    res.status(500).json({ error: error.message || "Server error during registration" });
   }
 });
 
-module.exports = router;
+// POST /api/auth/login (Using Passport.js local strategy)
+router.post("/api/auth/login", (req, res, next) => {
+  passport.authenticate("local", (err, user, info) => {
+    if (err) {
+      console.error("Passport authentication error:", err);
+      return res.status(500).json({ message: "Something went wrong during authentication", error: err.message });
+    }
+    if (!user) {
+      return res.status(400).json({ message: info.message || "Invalid email or password" });
+    }
+
+    req.login(user, (err) => {
+      if (err) {
+        console.error("Login failed after authentication:", err);
+        return res.status(500).json({ message: "Login failed", error: err.message });
+      }
+      // If using JWT for client-side authentication, generate and send token
+      const token = jwt.sign({ id: user._id }, JWT_SECRET, { expiresIn: '1d' });
+      return res.json({ message: "Logged in successfully", user: { id: user._id, name: user.name, email: user.email }, token });
+    });
+  })(req, res, next);
+});
+
+// --- OAuth Routes (Google) ---
+
+router.get("/google", passport.authenticate("google", { scope: ["profile", "email"] }));
+
+// 🟢 Google redirects here after auth (the callback)
+router.get(
+  "/google/callback",
+  passport.authenticate("google", {
+    failureRedirect: "/login", // Redirect to login on failure
+    session: true, // Maintain session (Passport.js usually handles this)
+  }),
+  (req, res) => {
+    // Redirect to your frontend dashboard after successful Google login
+    // Ensure this URL matches your frontend's actual dashboard route
+    res.redirect("http://localhost:5173/dashboard"); // Adjust to your frontend's deployed URL in production
+  }
+);
+
+// --- User Management Routes ---
+
+// Middleware to ensure user is authenticated for protected routes
+const ensureAuth = (req, res, next) => {
+  if (req.isAuthenticated()) {
+    return next();
+  }
+  res.status(401).json({ message: "Unauthorized: Please log in" });
+};
+
+// GET /auth/me - Get current logged-in user (corrected path)
+router.get("/auth/me", ensureAuth, (req, res) => {
+  // req.user is populated by Passport.js if authenticated
+  res.json({
+    user: {
+      id: req.user._id,
+      name: req.user.name,
+      email: req.user.email,
+      avatar: req.user.avatar, // optional if you store avatar
+      skills: req.user.skills, // optional if you store skills
+    },
+  });
+});
+
+// PUT /users/:id (This route seems generic, ensure it's intended for general user updates or remove if not needed)
+router.put("/users/:id", ensureAuth, async (req, res) => {
+  try {
+    const updated = await User.findByIdAndUpdate(req.params.id, req.body, {
+      new: true,
+    });
+    res.json(updated);
+  } catch (err) {
+    console.error("User update failed:", err);
+    res.status(500).json({ message: "User update failed", error: err.message });
+  }
+});
+
+// Multer storage configuration for file uploads
+const storage = multer.diskStorage({
+  destination: "uploads/", // Ensure this directory exists and is accessible
+  filename: (req, file, cb) => {
+    const uniqueName = `${Date.now()}-${file.originalname}`;
+    cb(null, uniqueName);
+  },
+});
+const upload = multer({ storage });
+
+// PUT /update-profile (requires user to be logged in and handles avatar upload)
+router.put("/update-profile", ensureAuth, upload.single("avatar"), async (req, res) => {
+  const { name, bio } = req.body;
+  const avatarUrl = req.file ? `/uploads/${req.file.filename}` : req.user.avatar; // Use existing avatar if no new file
+
+  try {
+    const updatedUser = await User.findByIdAndUpdate(
+      req.user._id, // Use req.user._id from the authenticated user
+      {
+        name,
+        bio,
+        avatar: avatarUrl,
+      },
+      { new: true }
+    );
+
+    res.json({ message: "Profile updated", user: updatedUser });
+  } catch (err) {
+    console.error("Profile Update Error:", err);
+    res.status(500).json({ message: "Failed to update profile", error: err.message });
+  }
+});
+
+// POST /logout
+router.post("/logout", (req, res) => {
+  req.logout((err) => {
+    if (err) {
+      console.error("Logout failed:", err);
+      return res.status(500).json({ message: "Logout failed", error: err.message });
+    }
+    // Clear the session cookie
+    res.clearCookie("connect.sid");
+    res.json({ message: "Logged out successfully" });
+  });
+});
+
+export default router;

@@ -7,7 +7,7 @@ import mongoose from "mongoose";
 import session from "express-session";
 import MongoStore from "connect-mongo"; // ✅ Add this
 import passport from "passport";
-import authRoutes from "./routes/auth.js";
+import authRoutes from "./routes/authRoutes.js";
 import Message from "./models/Message.js";
 import "./config/passport.js";
 
@@ -41,12 +41,11 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 app.use(cors({
-  origin: ['https://skill-swap-clean.vercel.app'], 
+  origin: ['https://skill-swap-clean.vercel.app', 'http://localhost:5173'], // Add your local dev URL
   credentials: true,
 }));
-
 app.use(session({
-  secret: process.env.SESSION_SECRET || "yoursecret",
+  secret: process.env.JWT_SECRET || "008df2e1aba2c6645243008aad3c19fabc1708abe1da1344ca4f87693bfb752ee5d5e513",
   resave: false,
   saveUninitialized: false,
   store: MongoStore.create({
