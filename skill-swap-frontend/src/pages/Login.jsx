@@ -1,11 +1,13 @@
 import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom"; // Keep Link and useNavigate
+import { Link, useNavigate } from "react-router-dom";
 import axios from "../utils/axiosInstance";
+import { useAuth } from "../context/AuthContext"; // Import useAuth hook
 
 function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const navigate = useNavigate();
+  const { setUser } = useAuth(); // Get setUser from AuthContext
 
   // Get the backend URL from environment variables
   const backendUrl = import.meta.env.VITE_BACKEND_URL;
@@ -15,18 +17,18 @@ function Login() {
     try {
       const res = await axios.post(`${backendUrl}/api/auth/login`, { email, password });
       console.log("Login successful:", res.data);
+
       if (res.data.user) {
+        // Explicitly update the user in AuthContext after successful login
+        setUser(res.data.user); 
         console.log("Attempting to navigate to /dashboard");
         navigate("/dashboard");
-      
       } else {
         console.warn("Login succeeded, but user data was not returned.");
       }
     } catch (err) {
       console.error("Login Error:", err);
-      // Using a custom modal or toast for alerts instead of window.alert()
       console.error("Login failed:", err.response?.data?.message || err.message);
-      // You might want to display a more user-friendly message here, e.g., using a state for a message box.
     }
   };
 
