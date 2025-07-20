@@ -11,20 +11,22 @@ export const AuthProvider = ({ children }) => {
   useEffect(() => {
     const fetchUser = async () => {
       try {
-        const res = await axios.get("/auth/me");
+        // Corrected API endpoint: Added /api prefix
+        const res = await axios.get("/api/auth/me"); 
         setUser(res.data.user);
       } catch (err) {
-        console.log("Not authenticated");
+        console.log("Not authenticated or failed to fetch user data:", err);
         setUser(null);
       } finally {
         setLoading(false);
       }
     };
     fetchUser();
-  }, []);
+  }, []); // Empty dependency array means this runs once on mount
 
   return (
     <AuthContext.Provider value={{ user, setUser, loading }}>
+      {/* Only render children when loading is complete */}
       {!loading && children}
     </AuthContext.Provider>
   );
