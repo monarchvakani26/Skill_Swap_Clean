@@ -7,7 +7,7 @@ import multer from 'multer';
 
 const router = express.Router();
 
-const JWT_SECRET = process.env.JWT_SECRET || '99d6e10c4ea8c33c77cba5952cff99b5490cda2b8103680be73b333442303d85';
+const JWT_SECRET = process.env.JWT_SECRET || '008df2e1aba2c6645243008aad3c19fabc1708abe1da1344ca4f87693bfb752ee5d5e513';
 
 // --- Local Authentication Routes ---
 
