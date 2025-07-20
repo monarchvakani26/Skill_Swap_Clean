@@ -1,6 +1,6 @@
 // src/context/AuthContext.jsx
 import { createContext, useContext, useEffect, useState } from "react";
-import axios from "../utils/axiosInstance";
+import axios from "../utils/axiosInstance"; // Ensure this is importing your configured axios instance
 
 export const AuthContext = createContext();
 
@@ -11,8 +11,8 @@ export const AuthProvider = ({ children }) => {
   useEffect(() => {
     const fetchUser = async () => {
       try {
-        // Corrected API endpoint: Added /api prefix
-        const res = await axios.get("/api/auth/me"); 
+        // CORRECTED: Added '/api' prefix to match backend routing
+        const res = await axios.get("/api/auth/me");
         setUser(res.data.user);
       } catch (err) {
         console.log("Not authenticated or failed to fetch user data:", err);
