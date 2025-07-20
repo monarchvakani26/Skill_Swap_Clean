@@ -1,14 +1,12 @@
 import express from "express";
 import bcrypt from "bcryptjs";
 import passport from "passport";
-import jwt from "jsonwebtoken"; // Import jwt for direct token creation if needed, or rely on Passport session
+import jwt from "jsonwebtoken";
 import User from "../models/User.js";
 import multer from 'multer';
 
 const router = express.Router();
 
-// IMPORTANT: Move this to your .env file and access via process.env.JWT_SECRET
-// For demonstration, keeping it here, but it should NOT be hardcoded in production.
 const JWT_SECRET = process.env.JWT_SECRET || '99d6e10c4ea8c33c77cba5952cff99b5490cda2b8103680be73b333442303d85';
 
 // --- Local Authentication Routes ---
@@ -42,7 +40,7 @@ router.post("/register", async (req, res) => {
 });
 
 // POST /login (Using Passport.js local strategy) - This will be accessible at /api/auth/login
-router.post("/login", (req, res, next) => { // Changed from "/api/auth/login" to "/login"
+router.post("/login", (req, res, next) => {
   passport.authenticate("local", (err, user, info) => {
     if (err) {
       console.error("Passport authentication error:", err);
@@ -78,8 +76,9 @@ router.get(
   }),
   (req, res) => {
     // Redirect to your frontend dashboard after successful Google login
-    // Ensure this URL matches your frontend's actual dashboard route
-    res.redirect("http://localhost:5173/dashboard"); // Adjust to your frontend's deployed URL in production
+    // Use process.env.FRONTEND_URL for dynamic redirection in production
+    const frontendUrl = process.env.FRONTEND_URL || "http://localhost:5173"; // Fallback for local development
+    res.redirect(`${frontendUrl}/dashboard`);
   }
 );
 
@@ -87,22 +86,28 @@ router.get(
 
 // Middleware to ensure user is authenticated for protected routes
 const ensureAuth = (req, res, next) => {
+  console.log("ensureAuth: Checking authentication status...");
+  console.log("req.isAuthenticated():", req.isAuthenticated());
+  console.log("req.user:", req.user); // Check if req.user is populated
+
   if (req.isAuthenticated()) {
+    console.log("ensureAuth: User is authenticated, proceeding.");
     return next();
   }
+  console.log("ensureAuth: User is NOT authenticated, sending 401.");
   res.status(401).json({ message: "Unauthorized: Please log in" });
 };
 
 // GET /me - Get current logged-in user - This will be accessible at /api/auth/me
-router.get("/me", ensureAuth, (req, res) => { // Changed from "/auth/me" to "/me"
-  // req.user is populated by Passport.js if authenticated
+router.get("/me", ensureAuth, (req, res) => {
+  console.log("GET /api/auth/me: Route reached.");
   res.json({
     user: {
       id: req.user._id,
       name: req.user.name,
       email: req.user.email,
-      avatar: req.user.avatar, // optional if you store avatar
-      skills: req.user.skills, // optional if you store skills
+      avatar: req.user.avatar,
+      skills: req.user.skills,
     },
   });
 });
