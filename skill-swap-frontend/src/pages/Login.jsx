@@ -1,32 +1,35 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
-import { useNavigate } from "react-router-dom"
+import { Link, useNavigate } from "react-router-dom"; // Keep Link and useNavigate
 import axios from "../utils/axiosInstance";
+
 function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const navigate = useNavigate()
+  const navigate = useNavigate();
+
+  // Get the backend URL from environment variables
+  const backendUrl = import.meta.env.VITE_BACKEND_URL;
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const res = await axios.post(`${import.meta.env.VITE_BACKEND_URL}/api/auth/login`, { email, password });
+      const res = await axios.post(`${backendUrl}/api/auth/login`, { email, password });
       console.log("Login successful:", res.data);
       if (res.data.user) {
         navigate("/dashboard");
       } else {
-        alert("Login succeeded, but user not returned")
+        // Using a custom modal or toast for alerts instead of window.alert()
+        // as window.alert() is not allowed in the Canvas environment.
+        console.warn("Login succeeded, but user data was not returned.");
+        // You might want to display a more user-friendly message here, e.g., using a state for a message box.
       }
-      
     } catch (err) {
       console.error("Login Error:", err);
-      alert("Login failed: " + (err.response?.data?.message || err.message));
+      // Using a custom modal or toast for alerts instead of window.alert()
+      console.error("Login failed:", err.response?.data?.message || err.message);
+      // You might want to display a more user-friendly message here, e.g., using a state for a message box.
     }
   };
-  
-  
-
-
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-100 px-4">
@@ -49,23 +52,26 @@ function Login() {
             onChange={(e) => setPassword(e.target.value)}
             required
           />
-          <button 
+          <button
             type="submit"
             className="w-full bg-pink-500 text-white py-3 rounded-lg hover:bg-pink-600"
           >
             Login
           </button>
           <div className="flex justify-center mt-4 gap-4">
-  <a href="http://localhost:5000/api/auth/google">
-    <img src="/google.svg" alt="Google Login" className="h-8 cursor-pointer" />
-  </a>
-  <a href="http://localhost:5000/auth/linkedin">
-    <img src="/linkedin.svg" alt="LinkedIn Login" className="h-8 cursor-pointer" />
-  </a>
-  <a href="http://localhost:5000/api/auth/facebook">
-    <img src="/facebook.svg" alt="Facebook Login" className="h-8 cursor-pointer" />
-  </a>
-</div>
+            {/* Corrected OAuth links to use the VITE_BACKEND_URL */}
+            <a href={`${backendUrl}/api/auth/google`} className="inline-block">
+              <img src="/google.svg" alt="Google Login" className="h-8 cursor-pointer" />
+            </a>
+            {/* Assuming LinkedIn OAuth path is /api/auth/linkedin */}
+            <a href={`${backendUrl}/api/auth/linkedin`} className="inline-block">
+              <img src="/linkedin.svg" alt="LinkedIn Login" className="h-8 cursor-pointer" />
+            </a>
+            {/* Assuming Facebook OAuth path is /api/auth/facebook */}
+            <a href={`${backendUrl}/api/auth/facebook`} className="inline-block">
+              <img src="/facebook.svg" alt="Facebook Login" className="h-8 cursor-pointer" />
+            </a>
+          </div>
         </form>
         <p className="text-center text-sm mt-4">
           Don’t have an account?{" "}

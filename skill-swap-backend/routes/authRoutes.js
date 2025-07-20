@@ -1,53 +1,3 @@
-// const express = require('express');
-// const router = express.Router();
-// const User = require('../models/User');
-// const bcrypt = require('bcrypt');
-// const jwt = require('jsonwebtoken');
-
-// const JWT_SECRET = process.env.JWT_SECRET || '99d6e10c4ea8c33c77cba5952cff99b5490cda2b8103680be73b333442303d85'; // Move to .env later
-
-// // POST /api/login
-// router.post('/api/auth/login', async (req, res) => {
-//   try {
-//     const { email, password } = req.body;
-
-//     // Check if user exists
-//     const user = await User.findOne({ email });
-//     if (!user) return res.status(400).json({ message: 'Invalid email or password' });
-
-//     // Compare passwords
-//     const isMatch = await bcrypt.compare(password, user.password);
-//     if (!isMatch) return res.status(400).json({ message: 'Invalid email or password' });
-
-//     // Create JWT Token
-//     const token = jwt.sign({ id: user._id }, JWT_SECRET, { expiresIn: '1d' });
-
-//     res.status(200).json({ message: 'Login successful', token });
-//   } catch (error) {
-//     res.status(500).json({ message: 'Server error' });
-//   }
-// });
-
-// module.exports = router;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 import express from "express";
 import bcrypt from "bcryptjs";
 import passport from "passport";
@@ -63,7 +13,7 @@ const JWT_SECRET = process.env.JWT_SECRET || '99d6e10c4ea8c33c77cba5952cff99b549
 
 // --- Local Authentication Routes ---
 
-// POST /register
+// POST /register - This will be accessible at /api/auth/register
 router.post("/register", async (req, res) => {
   const { name, email, password } = req.body;
   try {
@@ -91,8 +41,8 @@ router.post("/register", async (req, res) => {
   }
 });
 
-// POST /api/auth/login (Using Passport.js local strategy)
-router.post("/api/auth/login", (req, res, next) => {
+// POST /login (Using Passport.js local strategy) - This will be accessible at /api/auth/login
+router.post("/login", (req, res, next) => { // Changed from "/api/auth/login" to "/login"
   passport.authenticate("local", (err, user, info) => {
     if (err) {
       console.error("Passport authentication error:", err);
@@ -116,9 +66,10 @@ router.post("/api/auth/login", (req, res, next) => {
 
 // --- OAuth Routes (Google) ---
 
+// GET /google - This will be accessible at /api/auth/google
 router.get("/google", passport.authenticate("google", { scope: ["profile", "email"] }));
 
-// 🟢 Google redirects here after auth (the callback)
+// 🟢 Google redirects here after auth (the callback) - This will be accessible at /api/auth/google/callback
 router.get(
   "/google/callback",
   passport.authenticate("google", {
@@ -142,8 +93,8 @@ const ensureAuth = (req, res, next) => {
   res.status(401).json({ message: "Unauthorized: Please log in" });
 };
 
-// GET /auth/me - Get current logged-in user (corrected path)
-router.get("/auth/me", ensureAuth, (req, res) => {
+// GET /me - Get current logged-in user - This will be accessible at /api/auth/me
+router.get("/me", ensureAuth, (req, res) => { // Changed from "/auth/me" to "/me"
   // req.user is populated by Passport.js if authenticated
   res.json({
     user: {
@@ -156,7 +107,7 @@ router.get("/auth/me", ensureAuth, (req, res) => {
   });
 });
 
-// PUT /users/:id (This route seems generic, ensure it's intended for general user updates or remove if not needed)
+// PUT /users/:id - This will be accessible at /api/auth/users/:id
 router.put("/users/:id", ensureAuth, async (req, res) => {
   try {
     const updated = await User.findByIdAndUpdate(req.params.id, req.body, {
@@ -179,7 +130,7 @@ const storage = multer.diskStorage({
 });
 const upload = multer({ storage });
 
-// PUT /update-profile (requires user to be logged in and handles avatar upload)
+// PUT /update-profile (requires user to be logged in and handles avatar upload) - This will be accessible at /api/auth/update-profile
 router.put("/update-profile", ensureAuth, upload.single("avatar"), async (req, res) => {
   const { name, bio } = req.body;
   const avatarUrl = req.file ? `/uploads/${req.file.filename}` : req.user.avatar; // Use existing avatar if no new file
@@ -202,7 +153,7 @@ router.put("/update-profile", ensureAuth, upload.single("avatar"), async (req, r
   }
 });
 
-// POST /logout
+// POST /logout - This will be accessible at /api/auth/logout
 router.post("/logout", (req, res) => {
   req.logout((err) => {
     if (err) {
