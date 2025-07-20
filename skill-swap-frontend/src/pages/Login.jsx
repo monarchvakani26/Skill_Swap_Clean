@@ -18,10 +18,7 @@ function Login() {
       if (res.data.user) {
         navigate("/dashboard");
       } else {
-        // Using a custom modal or toast for alerts instead of window.alert()
-        // as window.alert() is not allowed in the Canvas environment.
         console.warn("Login succeeded, but user data was not returned.");
-        // You might want to display a more user-friendly message here, e.g., using a state for a message box.
       }
     } catch (err) {
       console.error("Login Error:", err);
