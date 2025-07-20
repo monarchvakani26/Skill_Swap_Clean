@@ -16,7 +16,9 @@ function Login() {
       const res = await axios.post(`${backendUrl}/api/auth/login`, { email, password });
       console.log("Login successful:", res.data);
       if (res.data.user) {
+        console.log("Attempting to navigate to /dashboard");
         navigate("/dashboard");
+      
       } else {
         console.warn("Login succeeded, but user data was not returned.");
       }
