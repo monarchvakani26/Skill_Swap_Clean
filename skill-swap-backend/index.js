@@ -1,3 +1,4 @@
+// skill-swap-backend/index.js
 import express from "express";
 import http from "http";
 import { Server } from "socket.io";
@@ -5,7 +6,7 @@ import cors from "cors";
 import dotenv from "dotenv";
 import mongoose from "mongoose";
 import session from "express-session";
-import MongoStore from "connect-mongo"; // ✅ Add this
+import MongoStore from "connect-mongo";
 import passport from "passport";
 import authRoutes from "./routes/authRoutes.js";
 import Message from "./models/Message.js";
@@ -18,7 +19,7 @@ const server = http.createServer(app);
 
 const io = new Server(server, {
   cors: {
-    origin: "https://skill-swap-clean.vercel.app",
+    origin: "https://skill-swap-clean.vercel.app", // Your deployed frontend URL
     credentials: true,
   },
 });
@@ -44,19 +45,20 @@ app.use(cors({
   origin: ['https://skill-swap-clean.vercel.app', 'http://localhost:5173'], // Add your local dev URL
   credentials: true,
 }));
+
 app.use(session({
-  secret: process.env.JWT_SECRET || "008df2e1aba2c6645243008aad3c19fabc1708abe1da1344ca4f87693bfb752ee5d5e513",
+  secret: process.env.SESSION_SECRET || "yoursecret", // Use a strong secret from .env
   resave: false,
   saveUninitialized: false,
   store: MongoStore.create({
     mongoUrl: process.env.MONGO_URI,
     collectionName: "sessions",
   }),
-  cookie: { 
+  cookie: {
     httpOnly: true,
-    maxAge: 1000 * 60 * 60 * 24,
-    sameSite: "lax",
-    secure: true
+    maxAge: 1000 * 60 * 60 * 24, // 1 day
+    sameSite: "none", // Changed from "lax" to "none" for cross-site cookies
+    secure: true // Must be true when sameSite is "none"
   }
 }));
 
@@ -64,7 +66,7 @@ app.use(passport.initialize());
 app.use(passport.session());
 
 app.use("/uploads", express.static("uploads"));
-app.use("/api/auth", authRoutes);
+app.use("/api/auth", authRoutes); // All auth routes are prefixed with /api/auth
 
 const PORT = process.env.PORT || 8080;
 
